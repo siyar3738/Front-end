@@ -11,6 +11,7 @@
     "axios": "^1.7.9",
     "bootstrap": "^5.3.3",
     "cra-template": "1.2.0",
+    "env": "^0.0.2",
     "jsonwebtoken": "^9.0.3",
     "project": "file:..",
     "react": "^19.0.0",
