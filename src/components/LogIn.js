@@ -15,7 +15,7 @@ const TokenCredentials = ({ tokenData }) => {
   );
 };
 
-const Login = () => {
+const Login = ({ handleAuthChange }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -37,43 +37,29 @@ const Login = () => {
     setError(null);
     setLoading(true);
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setError('Please enter a valid email address.');
-      setLoading(false);
-      return;
-    }
-
+    // Accept any non-empty email and password locally (no backend validation)
     try {
-      const response = await fetch('https://siyar3738.github.io/back-end/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const issuedAt = new Date().toISOString();
+      const expiresAt = new Date(Date.now() + 1000 * 60 * 60).toISOString(); // +1 hour
+      const token = Math.random().toString(36).slice(2);
 
-      const data = await response.json();
+      const user = { email };
+      const credentials = { token, issuedAt, expiresAt };
 
-      if (response.ok) {
-        const { user, token, issuedAt, expiresAt } = data;
-        const credentials = { token, issuedAt, expiresAt };
+      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('token', token);
+      localStorage.setItem('issuedAt', issuedAt);
+      localStorage.setItem('expiresAt', expiresAt);
 
-        localStorage.setItem('user', JSON.stringify(user));
-        localStorage.setItem('token', token);
-        localStorage.setItem('issuedAt', issuedAt);
-        localStorage.setItem('expiresAt', expiresAt);
+      setTokenData(credentials);
+      console.log('Token credentials generated (local):', credentials);
 
-        setTokenData(credentials);
-        console.log('Token credentials generated from login component:', credentials);
+      if (typeof handleAuthChange === 'function') handleAuthChange(user);
 
-        window.dispatchEvent(new Event('storage'));
-        navigate('/', { replace: true });
-      } else {
-        setError(data.message || 'Failed to log in. Please check your credentials.');
-      }
-    } catch (error) {
-      console.error('Login error:', error);
+      window.dispatchEvent(new Event('storage'));
+      navigate('/', { replace: true });
+    } catch (err) {
+      console.error('Login error:', err);
       setError('An error occurred. Please try again.');
     } finally {
       setLoading(false);
